@@ -1,98 +1,49 @@
 package com.apps.quantitymeasurement;
 
-public class QuantityMeasurementApp{
+ // Provides small static helpers that the tests and main() can call.
 
-	/* ===================== FEET CLASS ===================== */
-    public static class Feet {
-        private final double value;
+public class QuantityMeasurementApp {
 
-        public Feet(double value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            // 1. Reference check
-            if (this == obj) {
-            	return true;
-            }
-
-            // 2. Null & type check
-            if (obj == null || getClass() != obj.getClass()) {
-            	return false;
-            }
-
-            // 3. Cast and compare values
-            Feet other = (Feet) obj;
-            return Double.compare(this.value, other.value) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            return Double.hashCode(value);
-        }
-    }
-    
-    /* ===================== INCHES CLASS (NEW - UC2) ===================== */
-
-    public static class Inches {
-        private final double value;
-
-        public Inches(double value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-
-            // 1. Reference check
-            if (this == obj) {
-                return true;
-            }
-
-            // 2. Null & type check
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
-
-            // 3. Cast and compare values
-            Inches other = (Inches) obj;
-            return Double.compare(this.value, other.value) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            return Double.hashCode(value);
-        }
-    }
-    
-    
-    /* ===================== STATIC METHODS ===================== */
-    
-    // Feet Equality
-    public static boolean checkFeetEquality(double val1, double val2) {
-        Feet f1 = new Feet(val1);
-        Feet f2 = new Feet(val2);
-        return f1.equals(f2);
+    //  returns true if two Length objects are equal (after conversion).
+     
+    public static boolean demonstrateLengthEquality(Length length1, Length length2) {
+        if (length1 == null || length2 == null) return false;
+        return length1.equals(length2);
     }
 
-    // Inches Equality
-    public static boolean checkInchEquality(double val1, double val2) {
-        Inches i1 = new Inches(val1);
-        Inches i2 = new Inches(val2);
-        return i1.equals(i2);
-    }
     
-    /* ===================== MAIN METHOD ===================== */
+     // check feet equality (both values given in feet)
+     
+    public static void demonstrateFeetEquality() {
+        Length f1 = new Length(1.0, Length.LengthUnit.FEET);
+        Length f2 = new Length(1.0, Length.LengthUnit.FEET);
+        System.out.println("Feet equality (1.0 ft vs 1.0 ft): " + demonstrateLengthEquality(f1, f2));
+    }
 
+   
+    // check inches equality (both values given in inches)
+    
+    public static void demonstrateInchesEquality() {
+        Length i1 = new Length(1.0, Length.LengthUnit.INCHES);
+        Length i2 = new Length(1.0, Length.LengthUnit.INCHES);
+        System.out.println("Inches equality (1.0 in vs 1.0 in): " + demonstrateLengthEquality(i1, i2));
+    }
+
+   
+     // cross-unit comparison (1 foot == 12 inches)
+     
+    public static void demonstrateFeetInchesComparison() {
+        Length f = new Length(1.0, Length.LengthUnit.FEET);
+        Length i = new Length(12.0, Length.LengthUnit.INCHES);
+        System.out.println("Cross-unit equality (1.0 ft vs 12.0 in): " + demonstrateLengthEquality(f, i));
+    }
+
+    
+     // Main to show sample outputs for UC1/UC2/UC3.
+     
     public static void main(String[] args) {
-
-        System.out.println("Feet Equality: " +
-                checkFeetEquality(1.0, 1.0));
-
-        System.out.println("Inch Equality: " +
-                checkInchEquality(1.0, 1.0));
+        demonstrateFeetEquality();
+        demonstrateInchesEquality();
+        demonstrateFeetInchesComparison();
     }
-
- 
 }
