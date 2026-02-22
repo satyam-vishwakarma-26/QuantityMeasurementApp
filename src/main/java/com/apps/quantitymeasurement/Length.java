@@ -1,112 +1,127 @@
 package com.apps.quantitymeasurement;
 
+import java.util.Objects;
 
-// Generic immutable Length (Quantity) class.
-
-public final class Length {
-
-    private static final double EPSILON = 1e-4;
+/**
+ * Generic Length value object supporting:
+ * - Equality comparison (cross-unit)
+ * - Unit conversion
+ * - Addition of two length objects (UC6)
+ *
+ * Base unit: INCHES
+ */
+public class Length {
 
     private final double value;
     private final LengthUnit unit;
 
-    // Unit enum: conversion factor is "how many inches equals 1 unit".
-     
+    private static final double EPSILON = 1e-6;
+
+    /**
+     * Enum representing supported length units.
+     * Conversion factor is relative to base unit (INCHES).
+     */
     public enum LengthUnit {
         INCHES(1.0),
         FEET(12.0),
         YARDS(36.0),
-        CENTIMETERS(1.0/2.54); // 1 cm = 0.393701 inches
+        CENTIMETERS(0.393701);
 
-        private final double toInchesFactor;
+        private final double conversionFactor;
 
-        LengthUnit(double toInchesFactor) {
-            this.toInchesFactor = toInchesFactor;
+        LengthUnit(double conversionFactor) {
+            this.conversionFactor = conversionFactor;
         }
 
-        public double toInchesFactor() {
-            return toInchesFactor;
+        public double getConversionFactor() {
+            return conversionFactor;
         }
     }
 
-    // Construct an immutable Length object.
-   
     public Length(double value, LengthUnit unit) {
         if (unit == null) {
-            throw new IllegalArgumentException("unit must not be null");
+            throw new IllegalArgumentException("Unit cannot be null");
         }
         if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("value must be a finite number");
+            throw new IllegalArgumentException("Invalid numeric value");
         }
         this.value = value;
         this.unit = unit;
     }
 
-   // Returns numeric value.
-     
-    public double getValue() {
-        return value;
+    private double convertToBaseUnit() {
+        return value * unit.getConversionFactor();
     }
 
-    // Returns unit.
-     
-    public LengthUnit getUnit() {
-        return unit;
-    }
-    // Convert this length to base unit (inches).
-   
-    private double toBaseInches() {
-        return this.value * this.unit.toInchesFactor();
+    private double convertFromBaseToTargetUnit(double inches, LengthUnit targetUnit) {
+        return inches / targetUnit.getConversionFactor();
     }
 
-    // Instance conversion: returns a NEW Length expressed in targetUnit.
-    
+    /**
+     * Convert to another unit (UC5)
+     */
     public Length convertTo(LengthUnit targetUnit) {
         if (targetUnit == null) {
-            throw new IllegalArgumentException("targetUnit must not be null");
+            throw new IllegalArgumentException("Target unit cannot be null");
         }
-        double baseInches = toBaseInches();
-        double targetValue = baseInches / targetUnit.toInchesFactor();
-        return new Length(targetValue, targetUnit);
+
+        double inches = convertToBaseUnit();
+        double converted = convertFromBaseToTargetUnit(inches, targetUnit);
+
+        return new Length(converted, targetUnit);
     }
 
-    // Static helper: convert numeric value from source unit to target unit and return numeric result.
+    /**
+     * UC6: Add another Length to this one.
+     * Result returned in unit of first operand.
+     */
+    public Length add(Length thatLength) {
+        if (thatLength == null) {
+            throw new IllegalArgumentException("Cannot add null Length");
+        }
 
-    public static double convert(double value, LengthUnit source, LengthUnit target) {
-        if (source == null || target == null) {
-            throw new IllegalArgumentException("source and target units must not be null");
-        }
-        if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("value must be a finite number");
-        }
-        double baseInches = value * source.toInchesFactor();
-        return baseInches / target.toInchesFactor();
+        double thisInches = this.convertToBaseUnit();
+        double thatInches = thatLength.convertToBaseUnit();
+
+        double sumInches = thisInches + thatInches;
+
+        double resultValue = convertFromBaseToTargetUnit(sumInches, this.unit);
+
+        return new Length(resultValue, this.unit);
     }
 
-  //Compare Two Length 
-    public boolean compare(Length other) {
-        if (other == null) return false;
-        return Math.abs(this.toBaseInches() - other.toBaseInches()) < EPSILON;
+    private boolean compare(Length thatLength) {
+        double thisInches = this.convertToBaseUnit();
+        double thatInches = thatLength.convertToBaseUnit();
+
+        return Math.abs(thisInches - thatInches) < EPSILON;
     }
 
     @Override
     public boolean equals(Object o) {
-        
         if (this == o) return true;
-        
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Length)) return false;
         Length that = (Length) o;
-        return Math.abs(this.toBaseInches() - that.toBaseInches()) < EPSILON;
+        return compare(that);
     }
 
     @Override
     public int hashCode() {
-        double normalized = Math.round(this.toBaseInches() * 1e6) / 1e6;
-        return Double.hashCode(normalized);
+        return Objects.hash(
+                Math.round(convertToBaseUnit() / EPSILON)
+        );
     }
 
     @Override
     public String toString() {
-        return String.format("%.6f %s", value, unit.name());
+        return String.format("%.4f %s", value, unit);
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public LengthUnit getUnit() {
+        return unit;
     }
 }
