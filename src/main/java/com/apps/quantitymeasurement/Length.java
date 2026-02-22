@@ -1,26 +1,22 @@
 package com.apps.quantitymeasurement;
 
-/**
- * UC4 – Extended Generic Quantity Length Class
- * Supports FEET, INCHES, YARDS, CENTIMETERS
- * Base unit = INCHES
- */
 
-public class Length {
+// Generic immutable Length (Quantity) class.
+
+public final class Length {
+
+    private static final double EPSILON = 1e-4;
 
     private final double value;
     private final LengthUnit unit;
 
-    /**
-     * Enum defining supported length units
-     * Conversion factor is relative to base unit (INCHES)
-     */
+    // Unit enum: conversion factor is "how many inches equals 1 unit".
+     
     public enum LengthUnit {
-
-        INCHES(1.0),            // Base unit
-        FEET(12.0),             // 1 ft = 12 in
-        YARDS(36.0),            // 1 yd = 36 in
-        CENTIMETERS(0.393701);  // 1 cm = 0.393701 in
+        INCHES(1.0),
+        FEET(12.0),
+        YARDS(36.0),
+        CENTIMETERS(1.0/2.54); // 1 cm = 0.393701 inches
 
         private final double toInchesFactor;
 
@@ -28,58 +24,89 @@ public class Length {
             this.toInchesFactor = toInchesFactor;
         }
 
-        public double getToInchesFactor() {
+        public double toInchesFactor() {
             return toInchesFactor;
         }
     }
 
-    /**
-     * Constructor
-     */
+    // Construct an immutable Length object.
+   
     public Length(double value, LengthUnit unit) {
         if (unit == null) {
-            throw new IllegalArgumentException("Unit cannot be null");
+            throw new IllegalArgumentException("unit must not be null");
+        }
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("value must be a finite number");
         }
         this.value = value;
         this.unit = unit;
     }
 
-    /**
-     * Convert current length to base unit (inches)
-     */
-    private double toBaseUnit() {
-        return this.value * this.unit.getToInchesFactor();
+   // Returns numeric value.
+     
+    public double getValue() {
+        return value;
     }
 
-    /**
-     * Compare two Length objects
-     */
+    // Returns unit.
+     
+    public LengthUnit getUnit() {
+        return unit;
+    }
+    // Convert this length to base unit (inches).
+   
+    private double toBaseInches() {
+        return this.value * this.unit.toInchesFactor();
+    }
+
+    // Instance conversion: returns a NEW Length expressed in targetUnit.
+    
+    public Length convertTo(LengthUnit targetUnit) {
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("targetUnit must not be null");
+        }
+        double baseInches = toBaseInches();
+        double targetValue = baseInches / targetUnit.toInchesFactor();
+        return new Length(targetValue, targetUnit);
+    }
+
+    // Static helper: convert numeric value from source unit to target unit and return numeric result.
+
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+        if (source == null || target == null) {
+            throw new IllegalArgumentException("source and target units must not be null");
+        }
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("value must be a finite number");
+        }
+        double baseInches = value * source.toInchesFactor();
+        return baseInches / target.toInchesFactor();
+    }
+
+  //Compare Two Length 
     public boolean compare(Length other) {
         if (other == null) return false;
-        return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
+        return Math.abs(this.toBaseInches() - other.toBaseInches()) < EPSILON;
     }
 
     @Override
-    public boolean equals(Object obj) {
-
-        // Reflexive
-        if (this == obj) return true;
-
-        // Null and type check
-        if (obj == null || getClass() != obj.getClass()) return false;
-
-        Length other = (Length) obj;
-
-        return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
+    public boolean equals(Object o) {
+        
+        if (this == o) return true;
+        
+        if (o == null || getClass() != o.getClass()) return false;
+        Length that = (Length) o;
+        return Math.abs(this.toBaseInches() - that.toBaseInches()) < EPSILON;
     }
 
     @Override
     public int hashCode() {
-        return Double.hashCode(this.toBaseUnit());
+        double normalized = Math.round(this.toBaseInches() * 1e6) / 1e6;
+        return Double.hashCode(normalized);
     }
 
     @Override
     public String toString() {
-        return value + " " + unit.name();
+        return String.format("%.6f %s", value, unit.name());
     }
 }
