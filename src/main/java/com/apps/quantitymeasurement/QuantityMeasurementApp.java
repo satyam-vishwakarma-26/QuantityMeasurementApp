@@ -1,49 +1,46 @@
 package com.apps.quantitymeasurement;
 
- // Provides small static helpers that the tests and main() can call.
-
+ // UC4 Demo Application
+ 
 public class QuantityMeasurementApp {
 
-    //  returns true if two Length objects are equal (after conversion).
-     
-    public static boolean demonstrateLengthEquality(Length length1, Length length2) {
-        if (length1 == null || length2 == null) return false;
-        return length1.equals(length2);
+    public static boolean demonstrateLengthEquality(Length l1, Length l2) {
+        if (l1 == null || l2 == null) return false;
+        return l1.equals(l2);
     }
 
-    
-     // check feet equality (both values given in feet)
-     
-    public static void demonstrateFeetEquality() {
-        Length f1 = new Length(1.0, Length.LengthUnit.FEET);
-        Length f2 = new Length(1.0, Length.LengthUnit.FEET);
-        System.out.println("Feet equality (1.0 ft vs 1.0 ft): " + demonstrateLengthEquality(f1, f2));
+    public static boolean demonstrateLengthComparison(
+            double value1, Length.LengthUnit unit1,
+            double value2, Length.LengthUnit unit2) {
+
+        Length l1 = new Length(value1, unit1);
+        Length l2 = new Length(value2, unit2);
+
+        boolean result = l1.equals(l2);
+        System.out.println(l1 + " == " + l2 + " ? " + result);
+        return result;
     }
 
-   
-    // check inches equality (both values given in inches)
-    
-    public static void demonstrateInchesEquality() {
-        Length i1 = new Length(1.0, Length.LengthUnit.INCHES);
-        Length i2 = new Length(1.0, Length.LengthUnit.INCHES);
-        System.out.println("Inches equality (1.0 in vs 1.0 in): " + demonstrateLengthEquality(i1, i2));
-    }
-
-   
-     // cross-unit comparison (1 foot == 12 inches)
-     
-    public static void demonstrateFeetInchesComparison() {
-        Length f = new Length(1.0, Length.LengthUnit.FEET);
-        Length i = new Length(12.0, Length.LengthUnit.INCHES);
-        System.out.println("Cross-unit equality (1.0 ft vs 12.0 in): " + demonstrateLengthEquality(f, i));
-    }
-
-    
-     // Main to show sample outputs for UC1/UC2/UC3.
-     
     public static void main(String[] args) {
-        demonstrateFeetEquality();
-        demonstrateInchesEquality();
-        demonstrateFeetInchesComparison();
+
+        // Feet & Inches
+        demonstrateLengthComparison(1.0, Length.LengthUnit.FEET,
+                12.0, Length.LengthUnit.INCHES);
+
+        // Yards & Feet
+        demonstrateLengthComparison(1.0, Length.LengthUnit.YARDS,
+                3.0, Length.LengthUnit.FEET);
+
+        // Yards & Inches
+        demonstrateLengthComparison(1.0, Length.LengthUnit.YARDS,
+                36.0, Length.LengthUnit.INCHES);
+
+        // Centimeters & Inches
+        demonstrateLengthComparison(1.0, Length.LengthUnit.CENTIMETERS,
+                0.393701, Length.LengthUnit.INCHES);
+
+        // Complex Scenario
+        demonstrateLengthComparison(2.0, Length.LengthUnit.YARDS,
+                72.0, Length.LengthUnit.INCHES);
     }
 }

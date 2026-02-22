@@ -1,82 +1,85 @@
 package com.apps.quantitymeasurement;
 
+/**
+ * UC4 – Extended Generic Quantity Length Class
+ * Supports FEET, INCHES, YARDS, CENTIMETERS
+ * Base unit = INCHES
+ */
 
 public class Length {
 
-    // Instance fields
     private final double value;
     private final LengthUnit unit;
 
-   
-    // Supported length units and their conversion factor to the base unit (inches).
-     
+    /**
+     * Enum defining supported length units
+     * Conversion factor is relative to base unit (INCHES)
+     */
     public enum LengthUnit {
-        FEET(12.0),
-        INCHES(1.0);
 
-        private final double toInches;
+        INCHES(1.0),            // Base unit
+        FEET(12.0),             // 1 ft = 12 in
+        YARDS(36.0),            // 1 yd = 36 in
+        CENTIMETERS(0.393701);  // 1 cm = 0.393701 in
 
-        LengthUnit(double toInches) {
-            this.toInches = toInches;
+        private final double toInchesFactor;
+
+        LengthUnit(double toInchesFactor) {
+            this.toInchesFactor = toInchesFactor;
         }
 
-        public double getToInches() {
-            return toInches;
+        public double getToInchesFactor() {
+            return toInchesFactor;
         }
     }
 
-    //constructor 
+    /**
+     * Constructor
+     */
     public Length(double value, LengthUnit unit) {
         if (unit == null) {
-            throw new IllegalArgumentException("Length unit must not be null");
+            throw new IllegalArgumentException("Unit cannot be null");
         }
         this.value = value;
         this.unit = unit;
     }
 
-    
-     // Convert this length to the base unit (inches).
-    
-    private double toBaseInches() {
-        return this.value * this.unit.getToInches();
+    /**
+     * Convert current length to base unit (inches)
+     */
+    private double toBaseUnit() {
+        return this.value * this.unit.getToInchesFactor();
     }
 
-  
-    public boolean compare(Length that) {
-        if (that == null) return false;
-        return Double.compare(this.toBaseInches(), that.toBaseInches()) == 0;
+    /**
+     * Compare two Length objects
+     */
+    public boolean compare(Length other) {
+        if (other == null) return false;
+        return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
     }
 
     @Override
-    public boolean equals(Object o) {
-        // 1. Reference check
-        if (this == o) return true;
+    public boolean equals(Object obj) {
 
-        // 2. Null & type check
-        if (o == null || getClass() != o.getClass()) return false;
+        // Reflexive
+        if (this == obj) return true;
 
-        // 3. Cast & compare normalized values (inches)
-        Length that = (Length) o;
-        return Double.compare(this.toBaseInches(), that.toBaseInches()) == 0;
+        // Null and type check
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Length other = (Length) obj;
+
+        return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
     }
 
     @Override
     public int hashCode() {
-        // Use the normalized (base) value for hash code so equal objects have same hash
-        return Double.hashCode(this.toBaseInches());
+        return Double.hashCode(this.toBaseUnit());
     }
 
     @Override
     public String toString() {
-        return value + " " + unit.name().toLowerCase();
-    }
-
-    // Getter methods (if needed)
-    public double getValue() {
-        return value;
-    }
-
-    public LengthUnit getUnit() {
-        return unit;
+        return value + " " + unit.name();
     }
 }
