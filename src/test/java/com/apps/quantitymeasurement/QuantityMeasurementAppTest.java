@@ -315,4 +315,136 @@ public class QuantityMeasurementAppTest {
         assertEquals(12.0, converted.getValue(), EPS);
         assertEquals(LengthUnit.INCHES, converted.getUnit());
     }
+    
+    //Weight Equality Tests
+    
+    @Test
+    void testWeight_KilogramEquality() {
+        assertTrue(new Weight(1.0, WeightUnit.KILOGRAM)
+                .equals(new Weight(1.0, WeightUnit.KILOGRAM)));
+    }
+
+    @Test
+    void testWeight_KilogramToGramEquality() {
+        assertTrue(new Weight(1.0, WeightUnit.KILOGRAM)
+                .equals(new Weight(1000.0, WeightUnit.GRAM)));
+    }
+
+    @Test
+    void testWeight_KilogramToPoundEquality() {
+        assertTrue(new Weight(1.0, WeightUnit.KILOGRAM)
+                .equals(new Weight(2.20462, WeightUnit.POUND)));
+    }
+
+    @Test
+    void testWeight_Inequality() {
+        assertFalse(new Weight(1.0, WeightUnit.KILOGRAM)
+                .equals(new Weight(2.0, WeightUnit.KILOGRAM)));
+    }
+
+    @Test
+    void testWeight_EqualsNull() {
+        Weight w = new Weight(1.0, WeightUnit.KILOGRAM);
+        assertFalse(w.equals(null));
+    }
+    
+    //Weight Conversion Tests
+    
+    @Test
+    void testWeight_ConvertKilogramToGram() {
+        Weight result = new Weight(1.0, WeightUnit.KILOGRAM)
+                .convertTo(WeightUnit.GRAM);
+
+        assertEquals(1000.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testWeight_ConvertPoundToKilogram() {
+        Weight result = new Weight(2.20462, WeightUnit.POUND)
+                .convertTo(WeightUnit.KILOGRAM);
+
+        assertEquals(1.0, result.getValue(), 1e-4);
+    }
+
+    @Test
+    void testWeight_RoundTripConversion() {
+        Weight original = new Weight(1.5, WeightUnit.KILOGRAM);
+
+        Weight converted = original.convertTo(WeightUnit.GRAM)
+                .convertTo(WeightUnit.KILOGRAM);
+
+        assertEquals(original.getValue(), converted.getValue(), EPS);
+    }
+    
+    //Weight Addition Tests
+    
+    @Test
+    void testWeight_AddSameUnit() {
+        Weight result = new Weight(1.0, WeightUnit.KILOGRAM)
+                .add(new Weight(2.0, WeightUnit.KILOGRAM));
+
+        assertEquals(3.0, result.getValue(), EPS);
+        assertEquals(WeightUnit.KILOGRAM, result.getUnit());
+    }
+
+    @Test
+    void testWeight_AddCrossUnit() {
+        Weight result = new Weight(1.0, WeightUnit.KILOGRAM)
+                .add(new Weight(1000.0, WeightUnit.GRAM));
+
+        assertEquals(2.0, result.getValue(), EPS);
+    }
+    
+    //Weight Addition (Explicit Target)
+    
+    @Test
+    void testWeight_AddExplicitTargetGram() {
+        Weight result = new Weight(1.0, WeightUnit.KILOGRAM)
+                .add(new Weight(1000.0, WeightUnit.GRAM),
+                        WeightUnit.GRAM);
+
+        assertEquals(2000.0, result.getValue(), EPS);
+        assertEquals(WeightUnit.GRAM, result.getUnit());
+    }
+
+    @Test
+    void testWeight_AddExplicitTargetPound() {
+        Weight result = new Weight(1.0, WeightUnit.KILOGRAM)
+                .add(new Weight(1.0, WeightUnit.KILOGRAM),
+                        WeightUnit.POUND);
+
+        assertEquals(4.40924, result.getValue(), 1e-4);
+    }
+    
+    //Category Incompatibility Test
+    
+    @Test
+    void testWeightAndLengthAreNotEqual() {
+        Length length = new Length(1.0, LengthUnit.FEET);
+        Weight weight = new Weight(1.0, WeightUnit.KILOGRAM);
+
+        assertFalse(weight.equals(length));
+    }
+    
+    //Validation Tests for Weight
+    
+    @Test
+    void testWeight_NullUnitThrowsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Weight(1.0, null));
+    }
+
+    @Test
+    void testWeight_NaNThrowsException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Weight(Double.NaN, WeightUnit.KILOGRAM));
+    }
+
+    @Test
+    void testWeight_AddNullThrowsException() {
+        Weight w = new Weight(1.0, WeightUnit.KILOGRAM);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> w.add(null));
+    }
 }
