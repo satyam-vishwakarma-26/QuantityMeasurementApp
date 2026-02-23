@@ -1,9 +1,9 @@
 package com.apps.quantitymeasurement;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import com.apps.quantitymeasurement.Length.LengthUnit;
 
+import static org.junit.jupiter.api.Assertions.*;
+import com.apps.quantitymeasurement.LengthUnit;
 public class QuantityMeasurementAppTest {
 
     private static final double EPS = 1e-6;
@@ -37,7 +37,7 @@ public class QuantityMeasurementAppTest {
     @Test
     void testCentimeterEqualsInches() {
         assertTrue(new Length(100.0, LengthUnit.CENTIMETERS)
-                .equals(new Length(39.3701, LengthUnit.INCHES)));
+                .equals(new Length(39.3700787, LengthUnit.INCHES)));
     }
 
     @Test
@@ -223,5 +223,96 @@ public class QuantityMeasurementAppTest {
     void testConstructorRejectsInfinite() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Length(Double.POSITIVE_INFINITY, LengthUnit.FEET));
+    }
+    
+    //Test Standalone Enum Conversion to Base Unit
+    @Test
+    void testConvertToBaseUnit_InchesToFeet() {
+        assertEquals(1.0,
+                LengthUnit.INCHES.convertToBaseUnit(12.0),
+                EPS);
+    }
+
+    @Test
+    void testConvertToBaseUnit_YardsToFeet() {
+        assertEquals(3.0,
+                LengthUnit.YARDS.convertToBaseUnit(1.0),
+                EPS);
+    }
+
+    @Test
+    void testConvertToBaseUnit_CentimetersToFeet() {
+        assertEquals(1.0,
+                LengthUnit.CENTIMETERS.convertToBaseUnit(30.48),
+                EPS);
+    }
+    
+    //Test Convert From Base Unit
+    
+    @Test
+    void testConvertFromBaseUnit_FeetToInches() {
+        assertEquals(12.0,
+                LengthUnit.INCHES.convertFromBaseUnit(1.0),
+                EPS);
+    }
+
+    @Test
+    void testConvertFromBaseUnit_FeetToYards() {
+        assertEquals(1.0,
+                LengthUnit.YARDS.convertFromBaseUnit(3.0),
+                EPS);
+    }
+
+    @Test
+    void testConvertFromBaseUnit_FeetToCentimeters() {
+        assertEquals(30.48,
+                LengthUnit.CENTIMETERS.convertFromBaseUnit(1.0),
+                1e-4);
+    }
+    
+    //Round-Trip Conversion Test
+    @Test
+    void testRoundTripConversion() {
+
+        double original = 5.0;
+
+        double converted =
+                Length.convert(original, LengthUnit.FEET, LengthUnit.INCHES);
+
+        double roundTrip =
+                Length.convert(converted, LengthUnit.INCHES, LengthUnit.FEET);
+
+        assertEquals(original, roundTrip, EPS);
+    }
+    
+    //Test Equality Uses Refactored Enum
+    
+    @Test
+    void testRefactoredEqualityStillWorks() {
+        assertTrue(new Length(36.0, LengthUnit.INCHES)
+                .equals(new Length(1.0, LengthUnit.YARDS)));
+    }
+    
+    //Test HashCode Consistency
+    
+    @Test
+    void testEqualObjectsHaveSameHashCode() {
+
+        Length a = new Length(1.0, LengthUnit.FEET);
+        Length b = new Length(12.0, LengthUnit.INCHES);
+
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+    
+    //Test ConvertTo Instance Method Delegation
+    
+    @Test
+    void testInstanceConvertToUsesEnum() {
+
+        Length l = new Length(1.0, LengthUnit.FEET);
+        Length converted = l.convertTo(LengthUnit.INCHES);
+
+        assertEquals(12.0, converted.getValue(), EPS);
+        assertEquals(LengthUnit.INCHES, converted.getUnit());
     }
 }
