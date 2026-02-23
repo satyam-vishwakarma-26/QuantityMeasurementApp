@@ -2,6 +2,8 @@ package com.apps.quantitymeasurement;
 
 import java.util.Objects;
 
+ //UC8 – Refactored Length class
+ 
 public class Length {
 
     private final double value;
@@ -9,30 +11,8 @@ public class Length {
 
     private static final double EPS = 1e-6;
 
-    // Base Unit = INCHES
-    public enum LengthUnit {
-
-        FEET(12.0),
-        INCHES(1.0),
-        YARDS(36.0),
-        CENTIMETERS(0.393701);
-
-        private final double toInchesFactor;
-
-        LengthUnit(double toInchesFactor) {
-            this.toInchesFactor = toInchesFactor;
-        }
-
-        public double toInches(double value) {
-            return value * toInchesFactor;
-        }
-
-        public double fromInches(double inches) {
-            return inches / toInchesFactor;
-        }
-    }
-
     public Length(double value, LengthUnit unit) {
+
         if (unit == null)
             throw new IllegalArgumentException("Unit cannot be null");
 
@@ -51,22 +31,26 @@ public class Length {
         return unit;
     }
 
-    private double toBaseInches() {
-        return unit.toInches(value);
+    private double toBaseUnit() {
+        return unit.convertToBaseUnit(value);
     }
 
-    // ---------------- UC5: Convert ----------------
+    // ---------------- UC5: Conversion ----------------
 
     public Length convertTo(LengthUnit targetUnit) {
+
         if (targetUnit == null)
             throw new IllegalArgumentException("Target unit cannot be null");
 
-        double inches = toBaseInches();
-        double converted = targetUnit.fromInches(inches);
+        double baseValue = toBaseUnit();
+        double converted = targetUnit.convertFromBaseUnit(baseValue);
+
         return new Length(converted, targetUnit);
     }
 
-    public static double convert(double value, LengthUnit source, LengthUnit target) {
+    public static double convert(double value,
+                                 LengthUnit source,
+                                 LengthUnit target) {
 
         if (source == null || target == null)
             throw new IllegalArgumentException("Source/Target unit cannot be null");
@@ -74,20 +58,17 @@ public class Length {
         if (!Double.isFinite(value))
             throw new IllegalArgumentException("Value must be finite");
 
-        double inches = source.toInches(value);
-        return target.fromInches(inches);
+        double base = source.convertToBaseUnit(value);
+        return target.convertFromBaseUnit(base);
     }
 
-    // ---------------- UC6: Add (result in first operand unit) ----------------
+    // ---------------- UC6: Addition (implicit target) ----------------
 
     public Length add(Length that) {
-        if (that == null)
-            throw new IllegalArgumentException("Length to add cannot be null");
-
         return add(that, this.unit);
     }
 
-    // ---------------- UC7: Add with explicit target unit ----------------
+    // ---------------- UC7: Addition (explicit target) ----------------
 
     public Length add(Length that, LengthUnit targetUnit) {
 
@@ -97,10 +78,13 @@ public class Length {
         if (targetUnit == null)
             throw new IllegalArgumentException("Target unit cannot be null");
 
-        double sumInches = this.toBaseInches() + that.toBaseInches();
-        double resultValue = targetUnit.fromInches(sumInches);
+        double sumBase =
+                this.toBaseUnit() + that.toBaseUnit();
 
-        return new Length(resultValue, targetUnit);
+        double result =
+                targetUnit.convertFromBaseUnit(sumBase);
+
+        return new Length(result, targetUnit);
     }
 
     // ---------------- Equality ----------------
@@ -115,12 +99,12 @@ public class Length {
 
         Length that = (Length) o;
 
-        return Math.abs(this.toBaseInches() - that.toBaseInches()) < EPS;
+        return Math.abs(this.toBaseUnit() - that.toBaseUnit()) < EPS;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(Math.round(toBaseInches() / EPS));
+        return Objects.hash(Math.round(toBaseUnit() / EPS));
     }
 
     @Override
