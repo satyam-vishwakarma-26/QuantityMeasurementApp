@@ -2,9 +2,9 @@ package com.apps.quantitymeasurement;
 
 // UC10 – Common Unit Interface
 
-public interface IMeasurable {
+public interface IMeasurable  {
 
-    // Conversion factor relative to base unit
+    // Conversion factor relative to base unit -
     double getConversionFactor();
 
     // Convert value in THIS unit to base unit

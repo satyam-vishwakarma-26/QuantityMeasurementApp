@@ -2,8 +2,6 @@ package com.apps.quantitymeasurement;
 
 import java.util.Objects;
 
-// UC10 – Generic Quantity Class
- 
 public class Quantity<U extends IMeasurable> {
 
     private final double value;
@@ -12,7 +10,6 @@ public class Quantity<U extends IMeasurable> {
     private static final double EPS = 1e-5;
 
     public Quantity(double value, U unit) {
-
         if (unit == null)
             throw new IllegalArgumentException("Unit cannot be null");
 
@@ -35,35 +32,44 @@ public class Quantity<U extends IMeasurable> {
         return unit.convertToBaseUnit(value);
     }
 
-    // ---------------- Equality ----------------
+    private void validateOther(Quantity<U> other) {
+        if (other == null)
+            throw new IllegalArgumentException("Quantity cannot be null");
+
+        if (!this.unit.getClass().equals(other.unit.getClass()))
+            throw new IllegalArgumentException("Cross-category operation not allowed");
+    }
+
+    // ===================================================
+    // EQUALITY
+    // ===================================================
 
     @Override
     public boolean equals(Object obj) {
-
         if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (!(obj instanceof Quantity<?> other)) return false;
 
-        Quantity<?> that = (Quantity<?>) obj;
-
-        // Prevent cross-category comparison
-        if (!this.unit.getClass().equals(that.unit.getClass()))
+        if (!this.unit.getClass().equals(other.unit.getClass()))
             return false;
 
-        double thisBase = this.unit.convertToBaseUnit(this.value);
-        double thatBase = that.unit.convertToBaseUnit(that.value);
+        double thisBase = this.toBaseUnit();
+        double otherBase = other.unit.convertToBaseUnit(other.value);
 
-        return Math.abs(thisBase - thatBase) < EPS;
+        return Math.abs(thisBase - otherBase) < EPS;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(Math.round(toBaseUnit() / EPS));
+        // Normalize to base unit for consistent hashing
+        long normalized = Math.round(toBaseUnit() / EPS);
+        return Objects.hash(unit.getClass(), normalized);
     }
 
-    // ---------------- Conversion ----------------
+    // ===================================================
+    // CONVERSION
+    // ===================================================
 
     public Quantity<U> convertTo(U targetUnit) {
-
         if (targetUnit == null)
             throw new IllegalArgumentException("Target unit cannot be null");
 
@@ -73,36 +79,67 @@ public class Quantity<U extends IMeasurable> {
         return new Quantity<>(converted, targetUnit);
     }
 
-    // ---------------- Addition (Implicit Target = First Operand) ----------------
+    // ===================================================
+    // ADDITION
+    // ===================================================
 
     public Quantity<U> add(Quantity<U> other) {
         return add(other, this.unit);
     }
 
-    // ---------------- Addition (Explicit Target Unit) ----------------
-
     public Quantity<U> add(Quantity<U> other, U targetUnit) {
-
-        if (other == null)
-            throw new IllegalArgumentException("Quantity cannot be null");
+        validateOther(other);
 
         if (targetUnit == null)
             throw new IllegalArgumentException("Target unit cannot be null");
 
-        if (!this.unit.getClass().equals(other.unit.getClass()))
-            throw new IllegalArgumentException("Cannot add different measurement categories");
-
-        double sumBase =
-                this.unit.convertToBaseUnit(this.value) +
-                other.unit.convertToBaseUnit(other.value);
-
+        double sumBase = this.toBaseUnit() + other.toBaseUnit();
         double result = targetUnit.convertFromBaseUnit(sumBase);
 
         return new Quantity<>(result, targetUnit);
     }
 
+    // ===================================================
+    // SUBTRACTION (UC12)
+    // ===================================================
+
+    public Quantity<U> subtract(Quantity<U> other) {
+        return subtract(other, this.unit);
+    }
+
+    public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
+        validateOther(other);
+
+        if (targetUnit == null)
+            throw new IllegalArgumentException("Target unit cannot be null");
+
+        double resultBase = this.toBaseUnit() - other.toBaseUnit();
+        double result = targetUnit.convertFromBaseUnit(resultBase);
+
+        return new Quantity<>(result, targetUnit);
+    }
+
+    // ===================================================
+    // DIVISION (UC12)
+    // ===================================================
+
+    public double divide(Quantity<U> other) {
+        validateOther(other);
+
+        double divisor = other.toBaseUnit();
+
+        if (Math.abs(divisor) < EPS)
+            throw new ArithmeticException("Division by zero");
+
+        return this.toBaseUnit() / divisor;
+    }
+
+    // ===================================================
+    // TO STRING
+    // ===================================================
+
     @Override
     public String toString() {
-        return String.format("Quantity(%.6f, %s)", value, unit.getUnitName());
+        return "Quantity(" + value + ", " + unit.getUnitName() + ")";
     }
 }
