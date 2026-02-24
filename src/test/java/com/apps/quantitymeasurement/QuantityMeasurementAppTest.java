@@ -8,9 +8,7 @@ public class QuantityMeasurementAppTest {
 
     private static final double EPS = 1e-6;
 
-    // =====================================
     // LENGTH TESTS (Generic Quantity)
-    // =====================================
 
     @Test
     void testLengthEquality() {
@@ -64,9 +62,7 @@ public class QuantityMeasurementAppTest {
         assertEquals(LengthUnit.YARDS, result.getUnit());
     }
 
-    // =====================================
     // WEIGHT TESTS (Generic Quantity)
-    // =====================================
 
     @Test
     void testWeightEquality() {
@@ -131,9 +127,7 @@ public class QuantityMeasurementAppTest {
         assertEquals(WeightUnit.POUND, result.getUnit());
     }
 
-    // =====================================
     // CROSS CATEGORY SAFETY
-    // =====================================
 
     @Test
     void testLengthAndWeightNotEqual() {
@@ -147,9 +141,7 @@ public class QuantityMeasurementAppTest {
         assertFalse(length.equals(weight));
     }
 
-    // =====================================
     // EQUALITY CONTRACT TESTS
-    // =====================================
 
     @Test
     void testReflexiveSymmetricTransitive() {
@@ -187,9 +179,7 @@ public class QuantityMeasurementAppTest {
         assertEquals(a.hashCode(), b.hashCode());
     }
 
-    // =====================================
     // VALIDATION TESTS
-    // =====================================
 
     @Test
     void testConstructorRejectsNullUnit() {
@@ -213,9 +203,7 @@ public class QuantityMeasurementAppTest {
                 () -> q.add(null));
     }
     
- // =====================================
  // VOLUME TESTS (Generic Quantity) - UC11
- // =====================================
 
  @Test
  void testVolumeEquality_LitreToMillilitre() {
@@ -320,9 +308,7 @@ public class QuantityMeasurementAppTest {
 
      assertFalse(volume.equals(weight));
  }
-//=====================================
 //SUBTRACTION TESTS (UC12)
-//=====================================
 
 @Test
 void testSubtractionSameUnit_Length() {
@@ -408,9 +394,7 @@ void testSubtractionNullThrowsException() {
 }
 
 
-//=====================================
 //DIVISION TESTS (UC12)
-//=====================================
 
 @Test
 void testDivisionSameUnit_Length() {
@@ -478,5 +462,116 @@ void testDivisionCrossCategoryThrowsException() {
 
   assertThrows(IllegalArgumentException.class,
           () -> length.divide((Quantity) weight));
+}
+
+//Explicit Target Null Validation
+
+@Test
+void testSubtractNullTargetUnitThrowsException() {
+
+    Quantity<LengthUnit> q1 =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> q2 =
+            new Quantity<>(5.0, LengthUnit.FEET);
+
+    assertThrows(IllegalArgumentException.class,
+            () -> q1.subtract(q2, null));
+}
+    
+// Divide Null Operand
+
+@Test
+void testDivisionNullOperandThrowsException() {
+
+    Quantity<LengthUnit> q =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    assertThrows(IllegalArgumentException.class,
+            () -> q.divide(null));
+}
+// Subtraction Non-Commutative
+@Test
+void testSubtractionNonCommutative() {
+
+    Quantity<LengthUnit> q1 =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> q2 =
+            new Quantity<>(5.0, LengthUnit.FEET);
+
+    assertNotEquals(
+            q1.subtract(q2).getValue(),
+            q2.subtract(q1).getValue()
+    );
+}
+//    Division Non-Commutative
+@Test
+void testDivisionNonCommutative() {
+
+    Quantity<LengthUnit> q1 =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> q2 =
+            new Quantity<>(5.0, LengthUnit.FEET);
+
+    assertNotEquals(
+            q1.divide(q2),
+            q2.divide(q1)
+    );
+}
+// Immutability After Subtraction
+@Test
+void testImmutabilityAfterSubtraction() {
+
+    Quantity<LengthUnit> original =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> other =
+            new Quantity<>(5.0, LengthUnit.FEET);
+
+    original.subtract(other);
+
+    assertEquals(10.0, original.getValue(), EPS);
+}
+// Immutability After Division
+@Test
+void testImmutabilityAfterDivision() {
+
+    Quantity<LengthUnit> original =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> other =
+            new Quantity<>(2.0, LengthUnit.FEET);
+
+    original.divide(other);
+
+    assertEquals(10.0, original.getValue(), EPS);
+}
+// Add–Subtract Inverse Property
+@Test
+void testAdditionSubtractionInverse() {
+
+    Quantity<LengthUnit> a =
+            new Quantity<>(10.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> b =
+            new Quantity<>(5.0, LengthUnit.FEET);
+
+    Quantity<LengthUnit> result =
+            a.add(b).subtract(b);
+
+    assertTrue(result.equals(a));
+}
+// Chained Operations
+@Test
+void testChainedOperations() {
+
+    Quantity<LengthUnit> result =
+            new Quantity<>(10.0, LengthUnit.FEET)
+                    .subtract(new Quantity<>(2.0, LengthUnit.FEET))
+                    .subtract(new Quantity<>(1.0, LengthUnit.FEET));
+
+    assertEquals(7.0, result.getValue(), EPS);
 }
 }
