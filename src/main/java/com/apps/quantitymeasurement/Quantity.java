@@ -3,18 +3,12 @@ package com.apps.quantitymeasurement;
 import java.util.Objects;
 import java.util.function.DoubleBinaryOperator;
 
-
- //UC13: Centralized arithmetic logic (DRY enforced)
-
-
 public class Quantity<U extends IMeasurable> {
 
     private final double value;
     private final U unit;
 
     private static final double EPS = 1e-5;
-
-    // CONSTRUCTOR
 
     public Quantity(double value, U unit) {
 
@@ -40,14 +34,12 @@ public class Quantity<U extends IMeasurable> {
         return unit.convertToBaseUnit(value);
     }
 
-    // ENUM FOR ARITHMETIC OPERATIONS (DRY)
+    // ENUM FOR ARITHMETIC (UC13)
 
     private enum ArithmeticOperation {
 
         ADD((a, b) -> a + b),
-
         SUBTRACT((a, b) -> a - b),
-
         DIVIDE((a, b) -> {
             if (Math.abs(b) < EPS)
                 throw new ArithmeticException("Division by zero");
@@ -65,11 +57,10 @@ public class Quantity<U extends IMeasurable> {
         }
     }
 
-    // CENTRALIZED VALIDATION (DRY)
-
     private void validateArithmeticOperands(Quantity<U> other,
                                             U targetUnit,
-                                            boolean targetRequired) {
+                                            boolean targetRequired,
+                                            ArithmeticOperation operation) {
 
         if (other == null)
             throw new IllegalArgumentException("Quantity cannot be null");
@@ -77,14 +68,13 @@ public class Quantity<U extends IMeasurable> {
         if (!this.unit.getClass().equals(other.unit.getClass()))
             throw new IllegalArgumentException("Cross-category operation not allowed");
 
-        if (!Double.isFinite(this.value) || !Double.isFinite(other.value))
-            throw new IllegalArgumentException("Value must be finite");
+        // 🔥 UC14 check
+        if (!unit.supportsArithmetic())
+            unit.validateOperationSupport(operation.name());
 
         if (targetRequired && targetUnit == null)
             throw new IllegalArgumentException("Target unit cannot be null");
     }
-
-    // CORE BASE ARITHMETIC (DRY)
 
     private double performBaseArithmetic(Quantity<U> other,
                                          ArithmeticOperation operation) {
@@ -129,7 +119,6 @@ public class Quantity<U extends IMeasurable> {
         double base = toBaseUnit();
         double converted = targetUnit.convertFromBaseUnit(base);
 
-        // ❌ No rounding
         return new Quantity<>(converted, targetUnit);
     }
 
@@ -141,7 +130,7 @@ public class Quantity<U extends IMeasurable> {
 
     public Quantity<U> add(Quantity<U> other, U targetUnit) {
 
-        validateArithmeticOperands(other, targetUnit, true);
+        validateArithmeticOperands(other, targetUnit, true, ArithmeticOperation.ADD);
 
         double baseResult =
                 performBaseArithmetic(other, ArithmeticOperation.ADD);
@@ -149,7 +138,6 @@ public class Quantity<U extends IMeasurable> {
         double finalValue =
                 targetUnit.convertFromBaseUnit(baseResult);
 
-        // ❌ No rounding
         return new Quantity<>(finalValue, targetUnit);
     }
 
@@ -161,7 +149,7 @@ public class Quantity<U extends IMeasurable> {
 
     public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
 
-        validateArithmeticOperands(other, targetUnit, true);
+        validateArithmeticOperands(other, targetUnit, true, ArithmeticOperation.SUBTRACT);
 
         double baseResult =
                 performBaseArithmetic(other, ArithmeticOperation.SUBTRACT);
@@ -169,7 +157,6 @@ public class Quantity<U extends IMeasurable> {
         double finalValue =
                 targetUnit.convertFromBaseUnit(baseResult);
 
-        // ❌ No rounding
         return new Quantity<>(finalValue, targetUnit);
     }
 
@@ -177,12 +164,10 @@ public class Quantity<U extends IMeasurable> {
 
     public double divide(Quantity<U> other) {
 
-        validateArithmeticOperands(other, null, false);
+        validateArithmeticOperands(other, null, false, ArithmeticOperation.DIVIDE);
 
         return performBaseArithmetic(other, ArithmeticOperation.DIVIDE);
     }
-
-    // TO STRING
 
     @Override
     public String toString() {

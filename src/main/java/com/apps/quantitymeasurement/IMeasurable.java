@@ -1,18 +1,30 @@
 package com.apps.quantitymeasurement;
 
-// UC10 – Common Unit Interface
+public interface IMeasurable {
 
-public interface IMeasurable  {
-
-    // Conversion factor relative to base unit -
-    double getConversionFactor();
-
-    // Convert value in THIS unit to base unit
+    // Mandatory conversion methods
     double convertToBaseUnit(double value);
 
-    // Convert value from base unit to THIS unit
     double convertFromBaseUnit(double baseValue);
 
-    // Optional readable name
     String getUnitName();
+
+    double getConversionFactor();
+
+    // Arithmetic Support (UC14)
+
+    SupportsArithmetic supportsArithmetic = () -> true;
+
+    default boolean supportsArithmetic() {
+        return supportsArithmetic.isSupported();
+    }
+
+    default void validateOperationSupport(String operation) {
+        // Default: allow all operations
+    }
+}
+
+@FunctionalInterface
+ interface SupportsArithmetic {
+    boolean isSupported();
 }
