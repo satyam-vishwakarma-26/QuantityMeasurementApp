@@ -1,259 +1,292 @@
 # QuantityMeasurementApp
 
-### UC14: Temperature Measurement with Selective Arithmetic Support
+### UC16: Database Integration with JDBC for Quantity Measurement Persistence
 
 ---
 
 ## Description
 
-UC14 extends the **Quantity Measurement Application** to support **temperature measurements** alongside existing categories such as **length, weight, and volume**.
+UC16 extends the **Quantity Measurement Application** by introducing **database persistence using JDBC (Java Database Connectivity)**.
 
-Unlike other measurement categories, temperature behaves differently in arithmetic operations. While **equality comparison and unit conversion are valid**, operations such as **addition, subtraction, and division are not meaningful for absolute temperature values**.
+In earlier versions (UC1–UC15), measurement operations were stored **only in memory using a cache repository**. This meant that data could be lost when the application stopped or restarted.
 
-To support this behavior, UC14 refactors the **IMeasurable interface** by introducing **default methods that allow arithmetic operations to be optional**. This allows:
+UC16 replaces the in-memory storage with a **database-backed repository** using JDBC. Measurement operations are now stored in a **relational database (H2)**, enabling:
 
-- Length, Weight, and Volume units to support full arithmetic operations.
-- Temperature units to support only **conversion and equality comparison**.
-- The system to **gracefully prevent unsupported operations** through validation.
+- Persistent storage of measurement history
+- Querying and filtering measurement operations
+- Better scalability and reliability
+- Improved testing using an isolated test database
 
-This design demonstrates how a **generic system can be extended for categories with different operational constraints while maintaining type safety and SOLID design principles.**
+The system continues to follow a **clean N-Tier architecture**, where the service layer remains independent of the repository implementation. This allows the application to easily switch between **cache storage and database storage** through dependency injection.
 
 ---
 
 ## Preconditions
 
-- All functionality from **UC1–UC13** is implemented and operational.
-- `Quantity<U extends IMeasurable>` class supports generic measurements.
-- `LengthUnit`, `WeightUnit`, and `VolumeUnit` enums implement `IMeasurable`.
-- Arithmetic logic is centralized from **UC13**.
-- A new enum `TemperatureUnit` will be introduced.
-- Temperature conversions follow standard formulas:
-  - Celsius ↔ Fahrenheit
-  - Celsius ↔ Kelvin
-- Cross-category comparisons remain prohibited.
+- All functionality from **UC1–UC15** is implemented and working.
+- The application follows **N-Tier architecture**:
+  - Controller
+  - Service
+  - Repository
+  - Entity
+- `IQuantityMeasurementRepository` interface already exists.
+- `QuantityMeasurementCacheRepository` implements in-memory storage.
+- `QuantityMeasurementEntity` represents measurement data.
+- Maven is installed.
+- Java **17 or higher** is available.
+- JDBC and SQL basics are understood.
+- Database schema will be created using **H2 database**.
 
 ---
 
 ## Main Flow
 
-### 1. Refactor `IMeasurable` Interface
+### 1. Maven Project Structure
 
-Default methods are introduced to allow **optional arithmetic support**.
+The project is organized using **standard Maven directory layout**.
 
-Example responsibilities:
+```
+src
+ ├── main
+ │   ├── java
+ │   │   └── com.apps.quantitymeasurement
+ │   │        ├── controller
+ │   │        ├── service
+ │   │        ├── repository
+ │   │        ├── entity
+ │   │        ├── dto
+ │   │        ├── model
+ │   │        ├── unit
+ │   │        ├── util
+ │   │        └── exception
+ │
+ │   └── resources
+ │        ├── application.properties
+ │        └── db
+ │            └── schema.sql
+ │
+ └── test
+      └── java
+           └── com.apps.quantitymeasurement
+                ├── controller
+                ├── service
+                ├── repository
+                └── integrationTests
+```
 
-- Determine whether arithmetic is supported
-- Validate operations before execution
-- Allow specific categories (like temperature) to override behavior
-
-Default behavior allows arithmetic unless overridden.
+This structure separates **production code and test code** clearly.
 
 ---
 
-### 2. Functional Interface for Arithmetic Capability
+### 2. Database Configuration
 
-A functional interface indicates whether a unit supports arithmetic operations.
+Database properties are defined in:
 
 ```
-@FunctionalInterface
-public interface SupportsArithmetic {
-    boolean isSupported();
-}
+src/main/resources/application.properties
+
 ```
 
-Units define support using **lambda expressions**.
+The application uses **H2 in-memory database** for development and testing.
+
+---
+
+### 3. Database Schema Creation
+
+The database schema is defined in:
+
+```
+src/main/resources/db/schema.sql
+
+```
+
+The schema is automatically loaded when the application starts.
+
+---
+
+### 4. Connection Pool Implementation
+
+A **ConnectionPool utility class** manages reusable database connections.
+
+Responsibilities:
+
+- Create multiple database connections
+- Reuse connections instead of creating new ones
+- Improve performance
+- Handle concurrent access safely
 
 Example:
 
 ```
-SupportsArithmetic supportsArithmetic = () -> true;
-```
-
-Temperature units override this behavior.
-
----
-
-### 3. Create `TemperatureUnit` Enum
-
-`TemperatureUnit` implements `IMeasurable` and defines the following constants:
-
-- `CELSIUS`
-- `FAHRENHEIT`
-- `KELVIN`
-
-Key characteristics:
-
-- **Celsius acts as the base unit**
-- Conversion formulas use **lambda expressions**
-- Arithmetic operations are disabled
-- `validateOperationSupport()` throws `UnsupportedOperationException`
-
-Example conversion formulas:
-
-```
-F = (C × 9/5) + 32
-C = (F − 32) × 5/9
-K = C + 273.15
+Connection connection = ConnectionPool.getConnection();
+ConnectionPool.releaseConnection(connection);
 ```
 
 ---
 
-### 4. Update Quantity Class
+### 5. Database Repository Implementation
 
-The `Quantity` class validates operation support before performing arithmetic.
-
-Example validation:
+A new repository implementation is created:
 
 ```
-this.unit.validateOperationSupport(operation.name());
+QuantityMeasurementDatabaseRepository
 ```
 
-If the operation is unsupported, an exception is thrown.
+This class uses **JDBC and SQL queries** to interact with the database.
 
-Temperature conversions use specialized logic because they are **non-linear transformations**.
+Key operations:
+
+- Save measurement operations
+- Retrieve all stored measurements
+- Filter by operation type
+- Filter by measurement type
+- Count stored measurements
+- Delete all measurements
+
+Example query:
+
+```
+INSERT INTO quantity_measurement_entity
+(measurement_type, operation_type, value1, unit1, value2, unit2, result)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+```
+
+Parameterized queries prevent **SQL injection attacks**.
 
 ---
 
-### 5. Demonstration in QuantityMeasurementApp
+### 6. Service Layer Integration
 
-The application demonstrates:
+The service layer uses **Dependency Injection** to work with either:
 
-- Temperature equality comparisons
-- Temperature unit conversions
-- Attempted arithmetic operations that trigger exceptions
+```
+QuantityMeasurementCacheRepository
+```
 
-No changes to existing methods are required.
+or
+
+```
+QuantityMeasurementDatabaseRepository
+```
+
+This allows switching storage implementations **without modifying service logic**.
+
+---
+
+### 7. Application Initialization
+
+The main application initializes the appropriate repository and starts measurement operations.
+
+Example workflow:
+
+1. Application starts
+2. Database configuration is loaded
+3. Connection pool is created
+4. Repository is initialized
+5. Operations are executed
+6. Results are stored in the database
+7. Resources are closed on shutdown
 
 ---
 
 ## Postconditions
 
-- `TemperatureUnit` supports **CELSIUS, FAHRENHEIT, and KELVIN**.
-- Temperature measurements support:
-  - Equality comparison
-  - Unit conversion
-- Arithmetic operations throw `UnsupportedOperationException`.
-- All **UC1–UC13 tests pass without modification**.
-- Cross-category comparisons remain invalid.
-- The system supports categories with **different operational constraints**.
+After implementing UC16:
+
+- Measurement operations are **persisted in the database**.
+- Historical data can be retrieved and analyzed.
+- The project follows **Maven standard structure**.
+- Database connections are managed through **connection pooling**.
+- SQL queries are **parameterized and secure**.
+- Unit tests and integration tests verify database behavior.
+- All **UC1–UC15 functionality remains unchanged**.
 
 ---
 
 ## Example Output
 
-### Temperature Equality
+### Application Startup
 
 ```
-new Quantity<>(0.0, CELSIUS)
-.equals(new Quantity<>(32.0, FAHRENHEIT))
-
-→ true
-```
-
-```
-new Quantity<>(273.15, KELVIN)
-.equals(new Quantity<>(0.0, CELSIUS))
-
-→ true
+Starting QuantityMeasurementApp...
+Using Database Repository
+Running Quantity Measurement Operations...
 ```
 
 ---
 
-### Temperature Conversion
+### Measurement Operations
 
 ```
-new Quantity<>(100.0, CELSIUS)
-.convertTo(FAHRENHEIT)
-
-→ Quantity(212.0, FAHRENHEIT)
-```
-
-```
-new Quantity<>(32.0, FAHRENHEIT)
-.convertTo(CELSIUS)
-
-→ Quantity(0.0, CELSIUS)
-```
-
-```
-new Quantity<>(0.0, CELSIUS)
-.convertTo(KELVIN)
-
-→ Quantity(273.15, KELVIN)
+Compare Result: false
+Addition Result: 10.1 CM
+Subtraction Result: 9.9 CM
+Division Result: 100.0
+Conversion Result: 10.0 M
 ```
 
 ---
 
-### Unsupported Operations
+### Database Statistics
 
 ```
-new Quantity<>(100.0, CELSIUS)
-.add(new Quantity<>(50.0, CELSIUS))
-
-→ UnsupportedOperationException
-```
-
-```
-new Quantity<>(100.0, CELSIUS)
-.divide(new Quantity<>(50.0, CELSIUS))
-
-→ UnsupportedOperationException
-```
-
----
-
-### Cross Category Prevention
-
-```
-new Quantity<>(100.0, CELSIUS)
-.equals(new Quantity<>(100.0, FEET))
-
-→ false
+Total measurements stored: 5
+All measurements deleted.
+Application finished successfully.
 ```
 
 ---
 
 ## Concepts Learned
 
-### Interface Segregation Principle (ISP)
+### JDBC (Java Database Connectivity)
 
-Not all measurement categories support the same operations.  
-Temperature only implements relevant behaviors.
-
----
-
-### Default Methods in Interfaces
-
-Default methods allow **interface evolution without breaking existing implementations**.
+JDBC provides a **standard API for interacting with relational databases** in Java.
 
 ---
 
-### Functional Interfaces and Lambda Expressions
+### Connection Pooling
 
-Lambda expressions simplify conversion logic and operation capability checks.
-
----
-
-### Non-Linear Unit Conversions
-
-Temperature conversions use **formulas rather than simple multiplication factors**, unlike other measurement categories.
+Maintains reusable database connections to improve **performance and scalability**.
 
 ---
 
-### Capability-Based Design
+### Parameterized SQL Queries
 
-Units can expose supported operations through **capability checks**, improving robustness.
+Using `PreparedStatement` prevents **SQL injection vulnerabilities**.
 
 ---
 
-### Exception Semantics
+### Maven Project Structure
 
-`UnsupportedOperationException` clearly communicates invalid operations.
+Maven enforces a **standard project layout**, improving maintainability and collaboration.
+
+---
+
+### N-Tier Architecture
+
+Each layer has a clear responsibility:
+
+- Controller → user interaction
+- Service → business logic
+- Repository → database access
+
+---
+
+### Database Schema Management
+
+SQL schema files allow consistent **database initialization across environments**.
+
+---
+
+### Integration Testing
+
+Integration tests verify the **complete workflow from controller to database**.
 
 ---
 
 ## GitHub Link
 
 ```
-https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/feature/UC14-TemperatureMeasurement
+https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/feature/UC16-JDBCPersistence
 ```
