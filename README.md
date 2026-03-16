@@ -1,203 +1,327 @@
 # QuantityMeasurementApp
 
-### UC14: Temperature Measurement with Selective Arithmetic Support
+### UC15: N-Tier Architecture Refactoring for Quantity Measurement Application
 
 ---
 
 ## Description
 
-UC14 extends the **Quantity Measurement Application** to support **temperature measurements** alongside existing categories such as **length, weight, and volume**.
+UC15 refactors the **Quantity Measurement Application** from a monolithic structure into a **professional N-Tier architecture**. The application is reorganized into distinct layers to separate responsibilities and improve maintainability, scalability, and testability.
 
-Unlike other measurement categories, temperature behaves differently in arithmetic operations. While **equality comparison and unit conversion are valid**, operations such as **addition, subtraction, and division are not meaningful for absolute temperature values**.
+The architecture introduces the following layers:
 
-To support this behavior, UC14 refactors the **IMeasurable interface** by introducing **default methods that allow arithmetic operations to be optional**. This allows:
+- **Application Layer**
+- **Controller Layer**
+- **Service Layer**
+- **Entity / Model Layer**
+- **Repository Layer**
 
-- Length, Weight, and Volume units to support full arithmetic operations.
-- Temperature units to support only **conversion and equality comparison**.
-- The system to **gracefully prevent unsupported operations** through validation.
+This restructuring ensures that **business logic, data representation, persistence, and orchestration are clearly separated**.
 
-This design demonstrates how a **generic system can be extended for categories with different operational constraints while maintaining type safety and SOLID design principles.**
+The refactoring follows **SOLID design principles** and prepares the application for future extensions such as:
+
+- REST API development
+- Database persistence
+- Dependency injection frameworks (Spring / Guice)
+- Multiple client interfaces (CLI, GUI, Web)
+
+UC15 keeps **all functionality from UC1–UC14 unchanged**, while improving the **internal structure of the system**.
 
 ---
 
 ## Preconditions
 
-- All functionality from **UC1–UC13** is implemented and operational.
-- `Quantity<U extends IMeasurable>` class supports generic measurements.
-- `LengthUnit`, `WeightUnit`, and `VolumeUnit` enums implement `IMeasurable`.
-- Arithmetic logic is centralized from **UC13**.
-- A new enum `TemperatureUnit` will be introduced.
-- Temperature conversions follow standard formulas:
-  - Celsius ↔ Fahrenheit
-  - Celsius ↔ Kelvin
-- Cross-category comparisons remain prohibited.
+Before implementing UC15, the following functionality must already exist:
+
+- UC1–UC14 features are fully implemented
+- Quantity comparison
+- Unit conversion
+- Arithmetic operations (add, subtract, divide)
+- Temperature measurement support
+- `Quantity<U extends IMeasurable>` generic implementation
+- `IMeasurable` interface for measurement units
+- Unit enums implemented:
+  - LengthUnit
+  - WeightUnit
+  - VolumeUnit
+  - TemperatureUnit
+- Existing tests from UC1–UC14 must pass without modification.
 
 ---
 
-## Main Flow
+## N-Tier Architecture Overview
 
-### 1. Refactor `IMeasurable` Interface
+The application is structured into **four major layers**.
 
-Default methods are introduced to allow **optional arithmetic support**.
+```
+Application Layer
+        ↓
+Controller Layer
+        ↓
+Service Layer
+        ↓
+Repository Layer
+        ↓
+Entity / Model Layer
+```
 
-Example responsibilities:
-
-- Determine whether arithmetic is supported
-- Validate operations before execution
-- Allow specific categories (like temperature) to override behavior
-
-Default behavior allows arithmetic unless overridden.
+Each layer has a **clear responsibility**, enabling modular development and easier maintenance.
 
 ---
 
-### 2. Functional Interface for Arithmetic Capability
+## Layer Responsibilities
 
-A functional interface indicates whether a unit supports arithmetic operations.
+### Application Layer
+
+Class: `QuantityMeasurementApp`
+
+Responsibilities:
+
+- Entry point of the application
+- Initializes repository, service, and controller
+- Coordinates application flow
+- Delegates operations to the controller
+
+The application layer contains **minimal logic** and primarily performs initialization.
+
+---
+
+### Controller Layer
+
+Class: `QuantityMeasurementController`
+
+Responsibilities:
+
+- Handles user interaction
+- Accepts input using `QuantityDTO`
+- Delegates operations to the service layer
+- Formats and presents results
+
+Example operations exposed:
+
+- compare quantities
+- convert units
+- add quantities
+- subtract quantities
+- divide quantities
+
+The controller follows the **Facade pattern**, providing a simple interface to complex service logic.
+
+---
+
+### Service Layer
+
+Class: `QuantityMeasurementServiceImpl`
+
+Responsibilities:
+
+- Implements all business logic
+- Performs quantity comparison
+- Handles unit conversion
+- Executes arithmetic operations
+- Validates cross-category operations
+- Stores operation results in repository
+
+Key design principles:
+
+- **Single Responsibility Principle**
+- **Open-Closed Principle**
+- **Dependency Injection**
+
+The service layer interacts with the repository through the interface:
 
 ```
-@FunctionalInterface
-public interface SupportsArithmetic {
-    boolean isSupported();
-}
+IQuantityMeasurementRepository
 ```
 
-Units define support using **lambda expressions**.
+---
+
+### Repository Layer
+
+Interface: `IQuantityMeasurementRepository`
+
+Implementation:
+
+```
+QuantityMeasurementCacheRepository
+```
+
+Responsibilities:
+
+- Store quantity measurement operations
+- Maintain operation history
+- Serialize data to disk
+- Load history on application startup
+
+The repository uses:
+
+```
+ArrayList<QuantityMeasurementEntity>
+```
+
+as an in-memory cache and persists data using **Java serialization**.
+
+The repository follows the **Singleton design pattern**, ensuring only one instance exists.
+
+---
+
+### Entity / Model Layer
+
+This layer contains **data classes used across the application**.
+
+#### QuantityDTO
+
+Purpose:
+
+- Transfer quantity data between controller and service layers
+- Represent external input and output
+
+Contains:
+
+```
+value
+unit
+measurementType
+```
+
+---
+
+#### QuantityModel
+
+Purpose:
+
+- Internal representation of quantities within the service layer
+- Supports generic measurement units
+
+Generic structure:
+
+```
+QuantityModel<U extends IMeasurable>
+```
+
+---
+
+#### QuantityMeasurementEntity
+
+Purpose:
+
+- Stores complete operation history
+
+Contains:
+
+- operands
+- operation type
+- result
+- error information
+
+The entity implements **Serializable**, allowing operation history to be stored on disk.
+
+---
+
+## Design Patterns Used
+
+UC15 introduces several important design patterns.
+
+### Singleton Pattern
+
+Used in:
+
+```
+QuantityMeasurementCacheRepository
+```
+
+Ensures a single repository instance across the application.
+
+---
+
+### Factory Pattern
+
+Used in the application layer to create instances of:
+
+- Controller
+- Service
+
+This improves flexibility and maintainability.
+
+---
+
+### Facade Pattern
+
+`QuantityMeasurementController` acts as a **facade**, simplifying interaction with the service layer.
+
+---
+
+### Dependency Injection
+
+Dependencies are injected through constructors.
 
 Example:
 
 ```
-SupportsArithmetic supportsArithmetic = () -> true;
+QuantityMeasurementServiceImpl(repository)
 ```
 
-Temperature units override this behavior.
+Benefits:
+
+- Loose coupling
+- Easy testing
+- Replaceable implementations
 
 ---
 
-### 3. Create `TemperatureUnit` Enum
+## Data Flow Example
 
-`TemperatureUnit` implements `IMeasurable` and defines the following constants:
-
-- `CELSIUS`
-- `FAHRENHEIT`
-- `KELVIN`
-
-Key characteristics:
-
-- **Celsius acts as the base unit**
-- Conversion formulas use **lambda expressions**
-- Arithmetic operations are disabled
-- `validateOperationSupport()` throws `UnsupportedOperationException`
-
-Example conversion formulas:
+Example: Addition Operation
 
 ```
-F = (C × 9/5) + 32
-C = (F − 32) × 5/9
-K = C + 273.15
+User Input
+   ↓
+Controller (QuantityDTO)
+   ↓
+Service Layer
+   ↓
+Repository
+   ↓
+Entity Stored
+   ↓
+Result Returned to Controller
+   ↓
+Displayed to User
 ```
-
----
-
-### 4. Update Quantity Class
-
-The `Quantity` class validates operation support before performing arithmetic.
-
-Example validation:
-
-```
-this.unit.validateOperationSupport(operation.name());
-```
-
-If the operation is unsupported, an exception is thrown.
-
-Temperature conversions use specialized logic because they are **non-linear transformations**.
-
----
-
-### 5. Demonstration in QuantityMeasurementApp
-
-The application demonstrates:
-
-- Temperature equality comparisons
-- Temperature unit conversions
-- Attempted arithmetic operations that trigger exceptions
-
-No changes to existing methods are required.
 
 ---
 
 ## Postconditions
 
-- `TemperatureUnit` supports **CELSIUS, FAHRENHEIT, and KELVIN**.
-- Temperature measurements support:
-  - Equality comparison
-  - Unit conversion
-- Arithmetic operations throw `UnsupportedOperationException`.
-- All **UC1–UC13 tests pass without modification**.
-- Cross-category comparisons remain invalid.
-- The system supports categories with **different operational constraints**.
+After implementing UC15:
+
+- Application follows **N-Tier architecture**
+- Business logic is isolated in the service layer
+- Controller handles orchestration only
+- Entities standardize data exchange between layers
+- Repository manages persistence
+- Code becomes easier to test and maintain
+- UC1–UC14 behavior remains unchanged
+- Application is ready for **future database integration (UC16)**
 
 ---
 
 ## Example Output
 
-### Temperature Equality
+### Length Equality
 
 ```
-new Quantity<>(0.0, CELSIUS)
-.equals(new Quantity<>(32.0, FAHRENHEIT))
-
-→ true
-```
-
-```
-new Quantity<>(273.15, KELVIN)
-.equals(new Quantity<>(0.0, CELSIUS))
-
-→ true
+1 FEET == 12 INCHES
+Result → true
 ```
 
 ---
 
-### Temperature Conversion
+### Temperature Unsupported Operation
 
 ```
-new Quantity<>(100.0, CELSIUS)
-.convertTo(FAHRENHEIT)
-
-→ Quantity(212.0, FAHRENHEIT)
-```
-
-```
-new Quantity<>(32.0, FAHRENHEIT)
-.convertTo(CELSIUS)
-
-→ Quantity(0.0, CELSIUS)
-```
-
-```
-new Quantity<>(0.0, CELSIUS)
-.convertTo(KELVIN)
-
-→ Quantity(273.15, KELVIN)
-```
-
----
-
-### Unsupported Operations
-
-```
-new Quantity<>(100.0, CELSIUS)
-.add(new Quantity<>(50.0, CELSIUS))
-
-→ UnsupportedOperationException
-```
-
-```
-new Quantity<>(100.0, CELSIUS)
-.divide(new Quantity<>(50.0, CELSIUS))
-
-→ UnsupportedOperationException
+100 CELSIUS + 50 CELSIUS
+Result → UnsupportedOperationException
 ```
 
 ---
@@ -205,55 +329,64 @@ new Quantity<>(100.0, CELSIUS)
 ### Cross Category Prevention
 
 ```
-new Quantity<>(100.0, CELSIUS)
-.equals(new Quantity<>(100.0, FEET))
-
-→ false
+1 FEET == 1 KILOGRAM
+Result → false
 ```
 
 ---
 
 ## Concepts Learned
 
-### Interface Segregation Principle (ISP)
+### Separation of Concerns
 
-Not all measurement categories support the same operations.  
-Temperature only implements relevant behaviors.
-
----
-
-### Default Methods in Interfaces
-
-Default methods allow **interface evolution without breaking existing implementations**.
+Each layer focuses on a specific responsibility.
 
 ---
 
-### Functional Interfaces and Lambda Expressions
+### N-Tier Architecture
 
-Lambda expressions simplify conversion logic and operation capability checks.
-
----
-
-### Non-Linear Unit Conversions
-
-Temperature conversions use **formulas rather than simple multiplication factors**, unlike other measurement categories.
+Improves maintainability, scalability, and modular design.
 
 ---
 
-### Capability-Based Design
+### Data Transfer Objects (DTO)
 
-Units can expose supported operations through **capability checks**, improving robustness.
+DTOs enable structured communication between layers.
 
 ---
 
-### Exception Semantics
+### Dependency Injection
 
-`UnsupportedOperationException` clearly communicates invalid operations.
+Improves flexibility and testability.
+
+---
+
+### SOLID Principles
+
+UC15 follows:
+
+- Single Responsibility Principle
+- Open Closed Principle
+- Liskov Substitution Principle
+- Interface Segregation Principle
+- Dependency Inversion Principle
+
+---
+
+### Serialization
+
+Used to persist repository data across application restarts.
+
+---
+
+### Layered Testing
+
+Business logic can now be tested independently of UI or application layer.
 
 ---
 
 ## GitHub Link
 
 ```
-https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/feature/UC14-TemperatureMeasurement
+https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/feature/UC15-NTierArchitectureRefactor
 ```
