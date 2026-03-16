@@ -5,6 +5,7 @@ import com.apps.quantitymeasurement.repository.IQuantityMeasurementRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class QuantityMeasurementCacheRepository
         implements IQuantityMeasurementRepository {
@@ -30,7 +31,33 @@ public class QuantityMeasurementCacheRepository
     }
 
     @Override
-    public List<QuantityMeasurementEntity> findAll() {
-        return cache;
+    public List<QuantityMeasurementEntity> getAllMeasurements() {
+        return new ArrayList<>(cache);
+    }
+
+    @Override
+    public List<QuantityMeasurementEntity> getMeasurementsByOperation(String operationType) {
+
+        return cache.stream()
+                .filter(e -> operationType.equals(e.getOperationType()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<QuantityMeasurementEntity> getMeasurementsByType(String measurementType) {
+
+        return cache.stream()
+                .filter(e -> measurementType.equals(e.getMeasurementType()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public int getTotalCount() {
+        return cache.size();
+    }
+
+    @Override
+    public void deleteAll() {
+        cache.clear();
     }
 }
