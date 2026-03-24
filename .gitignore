@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 
 ### STS ###
+
 .apt_generated
 .classpath
 .factorypath
@@ -28,6 +29,6 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+dump/
 ### VS Code ###
 .vscode/
