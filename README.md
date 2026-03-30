@@ -1,5 +1,5 @@
 # QuantityMeasurementApp
-## UC-18 : Quantity Measurement App – Backend
+## UC-18 : Quantity Measurement App – Google Authentication 
 ---
 
 This repository contains the Spring Boot backend for the Quantity Measurement Application, enhanced with Google Authentication and User Management using Spring Security, JWT, and OAuth2.
