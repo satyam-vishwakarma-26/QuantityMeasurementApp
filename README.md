@@ -1,12 +1,26 @@
-# QuantityMeasurementApp
+# 🚀 Quantity Measurement App 
 
-## 🚀 Quantity Measurement App 
+- Conversion between different units (e.g., cm ↔ m, kg ↔ g)  
+- Comparison of quantities across units  
+- Arithmetic operations like addition and subtraction of quantities  
+- Handling of multiple measurement domains such as:
+  - Length  
+  - Weight  
+  - Volume  
+  - Temperature  
+
+This ensures **accuracy, consistency, and flexibility** in handling real-world measurement problems.
 ---
 
 This repository contains the Spring Boot backend for the Quantity Measurement Application.
-It provides multiple functionalities including unit conversion, arithmetic operations, and a secure authentication system using Spring Security, JWT, and Google OAuth2.
+The application is designed to perform **accurate unit measurement conversions and arithmetic operations on quantities** such as length, weight, volume, and temperature.  
+It also integrates a **secure authentication system using Spring Security, JWT, and Google OAuth2** to ensure safe and scalable user access.
 
 ---
+
+## 📏 About Quantity Measurement  
+
+The Quantity Measurement system enables:
 
 ## ⚙️ Core Functionalities  
 
@@ -117,7 +131,7 @@ It provides multiple functionalities including unit conversion, arithmetic opera
 
 This project implements a **modern backend system** with:
 
-- **Robust unit measurement and arithmetic handling**
+- **Robust quantity measurement and conversion logic**
 - **Secure authentication using OAuth2 and JWT**
 - **Scalable and maintainable architecture using Spring Boot**
 
@@ -126,4 +140,4 @@ It is designed to be **production-ready, secure, and easily extendable**.
 ---
 
 ## 🔗 Repository Link  
-👉 [View Code on GitHub](https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/dev)
+👉 [View Code on GitHub](https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/main)
