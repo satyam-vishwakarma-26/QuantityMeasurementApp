@@ -52,17 +52,16 @@ This repository contains the Spring Boot backend for the Quantity Measurement Ap
 
 ---
 
-### Project Structure 
+## 📁 Project Structure
 
-src/
- ├── controller        # REST Controllers
- ├── service           # Business Logic
- ├── repository        # Database Layer
- ├── model             # Entity Classes
- ├── security          # JWT & OAuth2 Configurations
- ├── config            # App Configurations
- └── exception         # Global Exception Handling
- 
+    src/
+     ├── controller        # REST Controllers
+     ├── service           # Business Logic
+     ├── repository        # Database Layer
+     ├── model             # Entity Classes
+     ├── security          # JWT & OAuth2 Configurations
+     ├── config            # App Configurations
+     └── exception         # Global Exception Handling
 ---
 
 ## 📂 API Endpoints (Sample)  
