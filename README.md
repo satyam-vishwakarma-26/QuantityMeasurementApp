@@ -1,15 +1,22 @@
 # QuantityMeasurementApp
-## UC-18 : Quantity Measurement App – Google Authentication 
+
+## 🚀 Quantity Measurement App 
 ---
 
-This repository contains the Spring Boot backend for the Quantity Measurement Application, enhanced with Google Authentication and User Management using Spring Security, JWT, and OAuth2.
+This repository contains the Spring Boot backend for the Quantity Measurement Application.
+It provides multiple functionalities including unit conversion, arithmetic operations, and a secure authentication system using Spring Security, JWT, and Google OAuth2.
+
+---
 
 ## ⚙️ Core Functionalities  
 
-- 🔐 Secure login with Google  
-- 🎫 JWT token generation & validation  
-- 👤 User registration & retrieval  
+- 📏 Unit measurement & conversion  
+- ➕ Arithmetic operations on quantities  
+- 🔐 Secure authentication with JWT & OAuth2  
+- 👤 User management system  
 - 🚫 Unauthorized access handling (401 / 403)  
+
+---
 
 ## ✨ Features Implemented
 
@@ -34,6 +41,7 @@ This repository contains the Spring Boot backend for the Quantity Measurement Ap
 - Exception handling  
 - Secure endpoints  
 - Token validation and filtering  
+
 ---
 
 ## 🛠️ Tech Stack
@@ -49,7 +57,6 @@ This repository contains the Spring Boot backend for the Quantity Measurement Ap
 | MySQL / H2       | Database (configurable)                   |
 | Maven            | Build Tool                                |
 
-
 ---
 
 ## 📁 Project Structure
@@ -62,15 +69,17 @@ This repository contains the Spring Boot backend for the Quantity Measurement Ap
      ├── security          # JWT & OAuth2 Configurations
      ├── config            # App Configurations
      └── exception         # Global Exception Handling
+
 ---
 
 ## 📂 API Endpoints (Sample)  
 
-| Endpoint            | Description                  |
-|--------------------|-----------------------------|
-| `/auth/google`     | Google login authentication |
-| `/auth/user`       | Get logged-in user details  |
-| `/api/**`          | Protected APIs              |
+| Endpoint                      | Description                          |
+|------------------------------|--------------------------------------|
+| `/auth/login`                | JWT-based login                     |
+| `/oauth2/authorize/google`   | Google OAuth2 login                 |
+| `/auth/user`                 | Get authenticated user details      |
+| `/api/**`                    | Protected APIs                      |
 
 ---
 
@@ -98,22 +107,23 @@ This repository contains the Spring Boot backend for the Quantity Measurement Ap
 
 - 🔐 High security (OAuth2 + JWT)  
 - ⚡ Scalable (stateless backend)  
-- 🧩 Clean architecture  
-- 🔄 Easy integration with frontend  
+- 🧩 Clean and maintainable architecture  
+- 🔄 Easy integration with frontend applications  
 - 👨‍💻 Reduced backend complexity  
+
+---
 
 ## 📌 Conclusion  
 
-This feature implements a **modern authentication system** using:
+This project implements a **modern backend system** with:
 
-- **OAuth2 for secure login**
-- **JWT for stateless session handling**
-- **Spring Security for API protection**
+- **Robust unit measurement and arithmetic handling**
+- **Secure authentication using OAuth2 and JWT**
+- **Scalable and maintainable architecture using Spring Boot**
 
-Together, they provide a **robust, scalable, and production-ready backend security system**.
+It is designed to be **production-ready, secure, and easily extendable**.
 
 ---
 
 ## 🔗 Repository Link  
-
-👉 [View Code on GitHub](https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/feature/UC18-GoogleAuthUserManagement)
+👉 [View Code on GitHub](https://github.com/satyam-vishwakarma-26/QuantityMeasurementApp/tree/dev)
