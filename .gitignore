@@ -4,8 +4,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+.metadata/
+bin/
+target/
+*.class
 
+### STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -29,6 +33,7 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-dump/
+
 ### VS Code ###
 .vscode/
+.env
