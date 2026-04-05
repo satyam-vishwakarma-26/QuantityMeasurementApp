@@ -4,6 +4,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+.metadata/
+bin/
+target/
+*.class
+
 ### STS ###
 .apt_generated
 .classpath
